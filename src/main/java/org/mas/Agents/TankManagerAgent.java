@@ -1,5 +1,6 @@
 package org.mas.Agents;
 
+import jade.core.AID;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -9,12 +10,24 @@ import jade.wrapper.StaleProxyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
+
 public class TankManagerAgent extends jade.core.Agent{
     private static final Logger logger = LoggerFactory.getLogger(TankManagerAgent.class);
     private int THRESHOLD = 500;
     public String parentTank;
     public String waterLevelAgent;
-    private String GROUP = "";
+    protected String GROUP = "";
+    protected HashSet<AID> outSet = new HashSet<>();
+    protected HashSet<AID> inSet = new HashSet<>();
+
+    enum State{
+        ACCEPTING,
+        OFFERING,
+        BLOCKING
+    }
+
+    protected State STATE = State.ACCEPTING;
 
     @Override
     public void setup(){
@@ -22,13 +35,14 @@ public class TankManagerAgent extends jade.core.Agent{
         GROUP = (String) this.getArguments()[1];
         parentTank = (String) this.getArguments()[0];
 
+
         waterLevelAgent = getAID().getLocalName()+"-waterLevelAgent";
 
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
-        sd.setType("TANK-MANAGER");
-        sd.setName(GROUP);
+        sd.setType(GROUP);
+        sd.setName(getAID().getLocalName());
         dfd.addServices(sd);
         try{
             DFService.register(this,dfd);
@@ -41,6 +55,7 @@ public class TankManagerAgent extends jade.core.Agent{
         }
 
         addBehaviour(new TankManagerBehaviour(this));
+//        addBehaviour(new TankManagerNeigbourBehavior(this));
 
     }
 

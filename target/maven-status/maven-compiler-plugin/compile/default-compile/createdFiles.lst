@@ -2,14 +2,16 @@ org\mas\Agents\WaterLevelAgent.class
 org\mas\Agents\TankManagerBehaviour.class
 org\mas\Agents\WaterLevelAgent$WaterLevelAgentBehaviour.class
 org\mas\Agents\PumpAgent$PumpChangeRequestMessage.class
-org\mas\Agents\HelloAgent.class
 org\mas\Agents\WaterLevelAgent$WaterLevelStateMessage.class
 org\mas\Agents\PumpAgent$PumpStopRequestMessage.class
 org\mas\Agents\ManagerAgent.class
 org\mas\Agents\PumpAgent$PumpBehavior.class
 org\mas\Agents\WaterLevelAgent$WaterLevelUpdateMessage.class
+org\mas\Agents\TankManagerAgent$State.class
 org\mas\Agents\WaterLevelAgent$WaterLevelAgentUpdateBehaviour.class
 org\mas\Agents\WaterLevelAgent$State.class
 org\mas\Agents\TankManagerAgent.class
+org\mas\Agents\TankManagerNeigbourBehavior.class
 org\mas\Agents\PumpAgent.class
 org\mas\Agents\WaterLevelAgent$1.class
+org\mas\Agents\TankManagerBehaviour$1.class
