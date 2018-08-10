@@ -12,15 +12,15 @@ import org.slf4j.LoggerFactory;
 public class TankManagerAgent extends jade.core.Agent{
     private static final Logger logger = LoggerFactory.getLogger(TankManagerAgent.class);
     private int THRESHOLD = 500;
-    private String PARENTTANK;
+    public String parentTank;
     public String waterLevelAgent;
     private String GROUP = "";
 
     @Override
     public void setup(){
         logger.info("Starting " + this.getAID().getLocalName());
-        GROUP = (String) this.getArguments()[0];
-        PARENTTANK = (String) this.getArguments()[1];
+        GROUP = (String) this.getArguments()[1];
+        parentTank = (String) this.getArguments()[0];
 
         waterLevelAgent = getAID().getLocalName()+"-waterLevelAgent";
 
@@ -40,6 +40,8 @@ public class TankManagerAgent extends jade.core.Agent{
             s.printStackTrace();
         }
 
+        addBehaviour(new TankManagerBehaviour(this));
+
     }
 
     private void createAgents() throws StaleProxyException {
@@ -47,6 +49,7 @@ public class TankManagerAgent extends jade.core.Agent{
         AgentController agentController = container.createNewAgent(waterLevelAgent,WaterLevelAgent.class.getName(),new Object[]{getAID().getLocalName(),THRESHOLD});
         agentController.start();
     }
+
 
     public void takeDown(){
         try{

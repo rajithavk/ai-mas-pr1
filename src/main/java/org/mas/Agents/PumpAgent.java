@@ -1,5 +1,6 @@
 package org.mas.Agents;
 
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.lang.acl.ACLMessage;
@@ -26,19 +27,60 @@ public class PumpAgent extends Agent {
         location = (String) this.getArguments()[1];
         rate     = (Integer) this.getArguments()[2];
 
-        logger.info("Starting to pump from " + root + " to " + location + " @ rate : " + rate );
+        if(location.equals("-")){
+            logger.info("Starting to pump from " + root + " to River" + " @ rate : " + rate + " L/s");
+        }else
+            logger.info("Starting to pump from " + root + " to " + location + " @ rate : " + rate + " L/s");
+
+        ACLMessage message = new ACLMessage(ACLMessage.INFORM);
+        message.addReceiver(new AID(root+"-waterLevelAgent",AID.ISLOCALNAME));
+        message.setSender(new AID(root,AID.ISLOCALNAME));
+        message.setContent("{\"outRate\" : " + rate + " }");
+        send(message);
+
+        ACLMessage message1 = new ACLMessage(ACLMessage.INFORM);
+        message1.addReceiver(new AID(location+"-waterLevelAgent",AID.ISLOCALNAME));
+        message1.setSender(new AID(root,AID.ISLOCALNAME));
+        message1.setContent("{\"inRate\" : " + rate + " }");
+        send(message1);
+
+        addBehaviour(new PumpBehavior(this));
     }
 
 
     public void pumpRate(Integer delta){
         rate += delta;
-        logger.info("Changed to pump from " + root + " to " + location + " @ rate : " + rate );
+        if(location.equals("-")){
+            logger.info("Starting to pump from " + root + " to River" + " @ rate : " + rate + " L/s");
+        }else
+            logger.info("Starting to pump from " + root + " to " + location + " @ rate : " + rate + " L/s");
     }
 
 
     @Override
     public void takeDown(){
-        logger.info("Stopping Pumping from " + root + " to " + location + " @ rate : " + rate );
+        if(location.equals("-")){
+            logger.info("Stopping to pump from " + root + " to River" + " @ rate : " + rate + " L/s");
+            ACLMessage message = new ACLMessage(ACLMessage.INFORM);
+            message.addReceiver(new AID(root+"-waterLevelAgent",AID.ISLOCALNAME));
+            message.setSender(new AID(root,AID.ISLOCALNAME));
+            message.setContent("{\"outRate\" : " + (-1*rate) + " }");
+            send(message);
+        }else {
+            logger.info("Stopping to pump from " + root + " to " + location + " @ rate : " + rate + " L/s");
+
+            ACLMessage message = new ACLMessage(ACLMessage.INFORM);
+            message.addReceiver(new AID(root + "-waterLevelAgent", AID.ISLOCALNAME));
+            message.setSender(new AID(root, AID.ISLOCALNAME));
+            message.setContent("{\"outRate\" : " + (-1 * rate) + " }");
+            send(message);
+
+            ACLMessage message1 = new ACLMessage(ACLMessage.INFORM);
+            message1.addReceiver(new AID(location + "-waterLevelAgent", AID.ISLOCALNAME));
+            message1.setSender(new AID(root, AID.ISLOCALNAME));
+            message1.setContent("{\"inRate\" : " + (-1 * rate) + " }");
+            send(message1);
+        }
     }
 
     public static class PumpBehavior extends Behaviour{
@@ -52,22 +94,20 @@ public class PumpAgent extends Agent {
         @Override
         public void action() {
             ACLMessage message = agent.blockingReceive();
-            if(message.getSender().getName().equals(agent.getRoot())){
-                try {
-                    Serializable msg = message.getContentObject();
-                    if(msg instanceof PumpChangeRequestMessage){
-                        agent.pumpRate(((PumpChangeRequestMessage) msg).rate);
-                    }
-                    else if(msg instanceof PumpStopRequestMessage){
-
-                        agent.doDelete();
-                    }
-
-
-                } catch (UnreadableException e) {
-                    e.printStackTrace();
+            try {
+                Serializable msg = message.getContentObject();
+                if(msg instanceof PumpChangeRequestMessage){
+                    agent.pumpRate(((PumpChangeRequestMessage) msg).rate);
                 }
+                else if(msg instanceof PumpStopRequestMessage){
+                    agent.doDelete();
+                }
+
+
+            } catch (UnreadableException e) {
+                e.printStackTrace();
             }
+
         }
 
         @Override

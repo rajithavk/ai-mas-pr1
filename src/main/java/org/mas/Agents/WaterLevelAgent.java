@@ -18,7 +18,7 @@ public class WaterLevelAgent extends Agent {
 
     public String rootAgent;
     private static final Logger logger = LoggerFactory.getLogger(WaterLevelAgent.class);
-    int currentLevel = 0;
+    int currentLevel = 100;
     int inRate = 0;
     int outRate = 0;
     int threshold = 500;
@@ -26,7 +26,8 @@ public class WaterLevelAgent extends Agent {
     static enum State {
         UNDER,
         THRESHOLD,
-        OVER
+        OVER,
+        EMPTY
     }
 
     public int getRate(){
@@ -37,8 +38,9 @@ public class WaterLevelAgent extends Agent {
         currentLevel += inRate - outRate;
 
         if(currentLevel<0) currentLevel=0;
-
-        if( currentLevel < threshold)
+        if(currentLevel == 0)
+            return State.EMPTY;
+        else if( currentLevel < threshold)
             return State.UNDER;
         else if(currentLevel >= threshold && currentLevel < (threshold + 100))
             return State.THRESHOLD;
@@ -72,21 +74,28 @@ public class WaterLevelAgent extends Agent {
             switch (STATE){
                 case UNDER:
                     if(s == State.THRESHOLD){
-                        logger.info(s.toString());
+                        logger.info("Water Level : "+s.toString());
                         sendMessage(new WaterLevelStateMessage(agent.getRate(),s));
                         STATE = s;
                     }
                     break;
                 case THRESHOLD:
                     if(s == State.OVER){
-                        logger.info(s.toString());
+                        logger.info("Water Level : "+s.toString());
                         sendMessage(new WaterLevelStateMessage(agent.getRate(),s));
                         STATE = s;
                     }
                     break;
                 case OVER:
                     if(s == State.UNDER){
-                        logger.info(s.toString());
+                        logger.info("Water Level : "+s.toString());
+                        sendMessage(new WaterLevelStateMessage(agent.getRate(),s));
+                        STATE = s;
+                    }
+                    break;
+                case EMPTY:
+                    if(s == State.UNDER){
+                        logger.info("Water Level : "+s.toString());
                         sendMessage(new WaterLevelStateMessage(agent.getRate(),s));
                         STATE = s;
                     }
@@ -158,8 +167,14 @@ public class WaterLevelAgent extends Agent {
                     WaterLevelUpdateMessage message1 = mapper.readValue(message.getContent(),WaterLevelUpdateMessage.class);
                     if(message1 == null) return;
                     if(message1.currentLevel !=null) agent.currentLevel = message1.currentLevel;
-                    if(message1.inRate !=null) agent.inRate = message1.inRate;
-                    if(message1.outRate !=null) agent.outRate = message1.outRate;
+                    if(message1.inRate !=null) {
+                        agent.inRate += message1.inRate;
+                        logger.info("New Inflow Rate : " + agent.inRate + "L/s");
+                    }
+                    if(message1.outRate !=null) {
+                        agent.outRate += message1.outRate;
+                        logger.info("New Outflow Rate : " + agent.outRate + "L/s");
+                    }
                     if(message1.threshold !=null) agent.threshold = message1.threshold;
 
                 } catch (JsonParseException e) {
